@@ -44,7 +44,7 @@
         zoom: 5,
       });
       var content;
-      fetch("vietnam.geojson")
+      fetch("vietnam_tinh.geojson")
         .then((response) => response.json())
         .then((text) => (content = text));
 
@@ -62,8 +62,18 @@
           source: "states",
           paint: {
             "fill-color": "rgba(200, 100, 240, 0.4)",
-            "fill-outline-color": "rgba(200, 100, 240, 1)",
+            "fill-outline-color": "red",
           },
+        });
+        map.addLayer({
+          id: "states-layer-hover",
+          type: "fill",
+          source: "states",
+          paint: {
+            "fill-color": "rgba(200, 100, 240, 0.6)",
+            "fill-outline-color": "white",
+          },
+          "filter": ["==", "NAME_1", ""]
         });
 
         // When a click event occurs on a feature in the states layer,
@@ -71,14 +81,16 @@
         // HTML from the click event's properties.
         var popup;
         map.on("mousemove", "states-layer", (e) => {
-          if (popup != null) popup.remove();
+            if (popup != null) popup.remove();
+
           popup = new mapboxgl.Popup({
             closeButton: false,
             closeOnClick: false,
           })
             .setLngLat(e.lngLat)
-            .setHTML(e.features[0].properties.NAME_3)
+            .setHTML(e.features[0].properties.NAME_1)
             .addTo(map);
+            map.setFilter("states-layer-hover", ["==", "NAME_1", e.features[0].properties.NAME_1]);
         });
 
         // Change the cursor to a pointer when
@@ -91,6 +103,9 @@
         // when it leaves the states layer.
         map.on("mouseleave", "states-layer", () => {
           map.getCanvas().style.cursor = "";
+          if (popup != null) popup.remove();
+          map.setFilter("states-layer-hover", ["==", "NAME_1",""]);
+
         });
       });
     </script>
