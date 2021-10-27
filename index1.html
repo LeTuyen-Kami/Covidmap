@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Show polygon information on click</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="style1.css">
+
+  </head>
+  <body>
+    <style>
+      .mapboxgl-popup {
+        max-width: 400px;
+        font: 12px/20px "Helvetica Neue", Arial, Helvetica, sans-serif;
+      }
+    </style>
+    <div class="nav">
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/3498/3498122.png"
+        alt="Lotus"
+      />
+      <ul>
+        <li><a href="#">home</a></li>
+        <li><a href="/index1.html">map</a></li>
+        <li><a href="#">News</a></li>
+        <li><a href="/index.html">Chart</a></li>
+        <div id="sliding"></div>
+
+      </ul>
+    </div>
+    <div id="map"></div>
+    <script>
+      var sliding=document.getElementById("sliding");
+      var item=document.querySelectorAll('a');
+      function indicator(e) {
+        sliding.style.left=e.offsetLeft+'px';
+      }
+      item.forEach(link=>{
+        link.addEventListener('mouseover',(e)=>{
+          indicator(e.target);
+        })
+      })
+      mapboxgl.accessToken =
+        "pk.eyJ1Ijoia2FuZWtpcml0bzEyNzciLCJhIjoiY2t1MGphMm4wMHV4eDJvczhzMmp3Z2dwNyJ9.lXjaIHaVdGyfuKN_aXZI_g";
+      // Create a new map.
+      const map = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/mapbox/streets-v11",
+        center: [106.660172, 10.762622],
+        zoom: 10,
+      });
+      var content;
+      var hcm;
+      fetch("vietnam_huyen.geojson")
+        .then((response) => response.json())
+        .then((text) => (content = text));
+        fetch("1.geojson")
+        .then((response) => response.json())
+        .then((text1) => (hcm = text1));
+      map.on("load", () => {
+        // Add a source for the state polygons.
+        map.addSource("states", {
+          type: "geojson",
+          data: content,
+        });
+
+        //Add a layer showing the state polygons.
+        map.addLayer({
+          id: "states-layer",
+          type: "fill",
+          source: "states",
+          paint: {
+            "fill-color": "rgba(200, 100, 240, 0.4)",
+            "fill-outline-color": "red",
+          },
+          "filter":["==","NAME_1","Hồ Chí Minh"]
+        });
+        // map.addLayer({
+        //   id: "states-layer-hover1",
+        //   type: "fill",
+        //   source: "states",
+        //   paint: {
+        //     "fill-color": "rgba(200, 100, 240, 0.6)",
+        //   },
+        // });
+        map.addLayer({
+          id: "states-layer-hover",
+          type: "line",
+          source: "states",
+          paint: {
+            "line-color":"white",
+            "line-width":2,
+          },
+          "filter": ["==", "NAME_1", ""]
+        });
+
+        // When a click event occurs on a feature in the states layer,
+        // open a popup at the location of the click, with description
+        // HTML from the click event's properties.
+        var popup;
+        map.on("mousemove", "states-layer", (e) => {
+            if (popup != null) popup.remove();
+
+          popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+          })
+            .setLngLat(e.lngLat)
+            .setHTML(e.features[0].properties.NAME_2)
+            .addTo(map);
+            map.setFilter("states-layer-hover", ["==", "NAME_2", e.features[0].properties.NAME_2]);
+            map.setFilter("states-layer-hover1", ["==", "NAME_2", e.features[0].properties.NAME_2]);
+
+        });
+        map.on("click",(e)=>{
+          map.getSource('states').setData(hcm);
+        });
+        // Change the cursor to a pointer when
+        // the mouse is over the states layer.
+        map.on("mouseenter", "states-layer", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+
+        // Change the cursor back to a pointer
+        // when it leaves the states layer.
+        map.on("mouseleave", "states-layer", () => {
+          map.getCanvas().style.cursor = "";
+          if (popup != null) popup.remove();
+          map.setFilter("states-layer-hover", ["==", "NAME_2",""]);
+          map.setFilter("states-layer-hover1", ["==", "NAME_2",""]);
+
+        });
+      });
+    </script>
+  </body>
+</html>

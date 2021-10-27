@@ -1,113 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <title>Show polygon information on click</title>
-    <meta
-      name="viewport"
-      content="initial-scale=1,maximum-scale=1,user-scalable=no"
-    />
-    <link
-      href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css"
-      rel="stylesheet"
-    />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="chart.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3498/3498122.png"/>
   </head>
   <body>
-    <style>
-      .mapboxgl-popup {
-        max-width: 400px;
-        font: 12px/20px "Helvetica Neue", Arial, Helvetica, sans-serif;
-      }
-    </style>
-    <div id="map"></div>
+    <div class="container">
+      <div class="nav">
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/3498/3498122.png"
+          alt="Lotus"
+        />
+        <ul>
+          <li><a href="#">home</a></li>
+          <li><a href="/index1.html">map</a></li>
+          <li><a href="#">News</a></li>
+          <li><a href="/index.html">Chart</a></li>
+          <div id="sliding"></div>
+
+        </ul>
+      </div>
+      <h2>SỐ LIỆU COVID-19</h2>
+      <div class="horizontal"></div>
+      <div class="body">
+        <div><canvas id="mychart" width="10px" height="7px"></canvas></div>
+        <div><canvas id="mychart1" width="10px" height="7px"></canvas></div>
+        <div><canvas id="mychart2" width="10px" height="7px"></canvas></div>
+      </div>
+      <div class="footer"><p>Copyright:myself</p></div>
+    </div>
     <script>
-      mapboxgl.accessToken =
-        "pk.eyJ1Ijoia2FuZWtpcml0bzEyNzciLCJhIjoiY2t1MGphMm4wMHV4eDJvczhzMmp3Z2dwNyJ9.lXjaIHaVdGyfuKN_aXZI_g";
-      // Create a new map.
-      const map = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: [106, 10],
-        zoom: 5,
-      });
-      var content;
-      fetch("vietnam_tinh.geojson")
-        .then((response) => response.json())
-        .then((text) => (content = text));
+      var sliding=document.getElementById("sliding");
+      var item=document.querySelectorAll('a');
+      function indicator(e) {
+        sliding.style.left=e.offsetLeft+'px';
+      }
+      item.forEach(link=>{
+        link.addEventListener('mouseover',(e)=>{
+          indicator(e.target);
+        })
+      })
+      function newdate(days) {
+        let today = new Date();
+        let date = new Date();
+        date.setDate(today.getDate() + days);
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        return day + "/" + month + "/" + date.getFullYear();
+      }
+      function numbers(count, min, max, int) {
+        let data = [];
+        if (int == 0) {
+          for (let i = 0; i < count; i++) {
+            data.push(Math.floor(Math.random() * max) + min);
+          }
+        } else {
+          let temp=0;
+          for (let i = 0; i < count; i++) {
+            temp=Math.random() * 50000+temp;
+            data.push(temp);
+          }
+        }
+        return data;
+      }
+      function labels(count) {
+        let labels = [];
+        for (let i = 0; i < count; ++i) {
+          labels.push(newdate(i - count));
+        }
+        return labels;
+      }
+      const DATA_COUNT = 100;
+      const NUMBER_CFG = { count: DATA_COUNT, min: 0, max: 100000 };
 
-      map.on("load", () => {
-        // Add a source for the state polygons.
-        map.addSource("states", {
-          type: "geojson",
-          data: content,
-        });
-
-        // Add a layer showing the state polygons.
-        map.addLayer({
-          id: "states-layer",
-          type: "fill",
-          source: "states",
-          paint: {
-            "fill-color": "rgba(200, 100, 240, 0.4)",
-            "fill-outline-color": "red",
+      const data = {
+        labels: labels(100),
+        datasets: [
+          {
+            label: "Ca dương tính",
+            data: numbers(NUMBER_CFG.count, NUMBER_CFG.min, NUMBER_CFG.max, 1),
+            backgroundColor: "rgba(255, 99, 132,0.5)",
+            borderColor: "rgb(255, 99, 132)",
+            hoverBorderColor: "#fff",
+            borderWidth: 1,
+            hoverBackgroundColor: "red",
+            pointStyle: "circle",
           },
-        });
-        map.addLayer({
-          id: "states-layer-hover",
-          type: "fill",
-          source: "states",
-          paint: {
-            "fill-color": "rgba(200, 100, 240, 0.6)",
-            "fill-outline-color": "white",
+        ],
+      };
+      const data2 = {
+        labels: labels(20),
+        datasets: [
+          {
+            label: "Ca dương tính",
+            data: numbers(20, NUMBER_CFG.min, NUMBER_CFG.max, 0),
+            backgroundColor: "rgba(255, 99, 132,0.5)",
+            borderColor: "rgb(255, 99, 132)",
+            hoverBorderColor: "#fff",
+            borderWidth: 1,
+            hoverBackgroundColor: "red",
+            pointStyle: "circle",
           },
-          "filter": ["==", "NAME_1", ""]
-        });
-
-        // When a click event occurs on a feature in the states layer,
-        // open a popup at the location of the click, with description
-        // HTML from the click event's properties.
-        var popup;
-        map.on("mousemove", "states-layer", (e) => {
-            if (popup != null) popup.remove();
-
-          popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false,
-          })
-            .setLngLat(e.lngLat)
-            .setHTML(e.features[0].properties.NAME_1)
-            .addTo(map);
-            map.setFilter("states-layer-hover", ["==", "NAME_1", e.features[0].properties.NAME_1]);
-        });
-
-        // Change the cursor to a pointer when
-        // the mouse is over the states layer.
-        map.on("mouseenter", "states-layer", () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-
-        // Change the cursor back to a pointer
-        // when it leaves the states layer.
-        map.on("mouseleave", "states-layer", () => {
-          map.getCanvas().style.cursor = "";
-          if (popup != null) popup.remove();
-          map.setFilter("states-layer-hover", ["==", "NAME_1",""]);
-
-        });
-      });
+        ],
+      };
+      const config = {
+        type: "bar",
+        data: data,
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Số ca dương tính",
+            },
+            legend: {
+              labels: {
+                usePointStyle: true,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+          interaction: {
+            intersect: false,
+          },
+        },
+      };
+      const config1 = {
+        responsive: true,
+        type: "line",
+        data: data2,
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Tổng ca dương tính",
+            },
+            legend: {
+              labels: {
+                usePointStyle: true,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+          interaction: {
+            intersect: false,
+          },
+        },
+      };
+      const config2 = {
+        responsive: true,
+        type: "bar",
+        data: data2,
+        options: {
+          indexAxis: "y",
+          plugins: {
+            title: {
+              display: true,
+              text: "Số liệu theo từng khu vực",
+            },
+            legend: {
+              labels: {
+                usePointStyle: true,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+          interaction: {
+            intersect: true,
+          },
+        },
+      };
+      
+      var myChart = new Chart(document.getElementById("mychart"), config);
+      var myChart1 = new Chart(document.getElementById("mychart1"), config1);
+      var myChart2 = new Chart(document.getElementById("mychart2"), config2);
     </script>
   </body>
 </html>
