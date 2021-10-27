@@ -16,7 +16,7 @@ a {
   position: relative;
   text-decoration: none;
   display: block;
-  width: 80px;
+  width: 100px;
   height: 55px;
   text-align: center;
   overflow: hidden;
@@ -51,9 +51,9 @@ ul {
   content: '';
   position: absolute;
   bottom: 0;
-  width: 80px;
+  width: 100px;
   height: 5px;
-  left: 340px;
+  left: 100px;
   background-color: pink;
   transition:ease-in-out  1s;
 }
