@@ -24,7 +24,7 @@ li {
     position: relative;
     text-decoration: none;
     display: block;
-    width: 80px;
+    width: 100px;
     height: 55px;
     text-align: center;
     overflow: hidden;
@@ -60,9 +60,9 @@ li {
     content: '';
     position: absolute;
     bottom: 0;
-    width: 80px;
+    width: 100px;
     height: 5px;
-    left: 180px;
+    left: 200px;
     background-color: pink;
     transition:ease-in-out  1s;
   }
@@ -80,3 +80,16 @@ li {
   img:hover {
     cursor: pointer;
   }
+  #popup{
+    display:flex; flex-flow:row wrap;
+    line-height: 10px;
+  }
+  #popup .left {
+    width:80%;
+    text-align:left;
+    }
+
+  #popup  .right {
+    width:20%;
+    text-align:right;
+    }

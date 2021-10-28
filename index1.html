@@ -11,9 +11,13 @@
       href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css"
       rel="stylesheet"
     />
+    <script
+      src="https://kit.fontawesome.com/298c92426c.js"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
-    <link rel="stylesheet" href="style1.css">
-
+    <script src="https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js"></script>
+    <link rel="stylesheet" href="style1.css" />
   </head>
   <body>
     <style>
@@ -28,26 +32,33 @@
         alt="Lotus"
       />
       <ul>
-        <li><a href="#">home</a></li>
-        <li><a href="/index1.html">map</a></li>
-        <li><a href="#">News</a></li>
-        <li><a href="/index.html">Chart</a></li>
+        <li>
+          <a href="#"><i class="fas fa-home"></i> home</a>
+        </li>
+        <li>
+          <a href="/index1.html"><i class="far fa-map"></i> map</a>
+        </li>
+        <li>
+          <a href="#"><i class="far fa-newspaper"></i> News</a>
+        </li>
+        <li>
+          <a href="/index.html"><i class="far fa-chart-bar"></i> Chart</a>
+        </li>
         <div id="sliding"></div>
-
       </ul>
     </div>
     <div id="map"></div>
     <script>
-      var sliding=document.getElementById("sliding");
-      var item=document.querySelectorAll('a');
+      var sliding = document.getElementById("sliding");
+      var item = document.querySelectorAll("a");
       function indicator(e) {
-        sliding.style.left=e.offsetLeft+'px';
+        sliding.style.left = e.offsetLeft + "px";
       }
-      item.forEach(link=>{
-        link.addEventListener('mouseover',(e)=>{
+      item.forEach((link) => {
+        link.addEventListener("mouseover", (e) => {
           indicator(e.target);
-        })
-      })
+        });
+      });
       mapboxgl.accessToken =
         "pk.eyJ1Ijoia2FuZWtpcml0bzEyNzciLCJhIjoiY2t1MGphMm4wMHV4eDJvczhzMmp3Z2dwNyJ9.lXjaIHaVdGyfuKN_aXZI_g";
       // Create a new map.
@@ -57,19 +68,24 @@
         center: [106.660172, 10.762622],
         zoom: 10,
       });
-      var content;
-      var hcm;
+      var tinh;
+      var huyen;
+      var xa;
+      fetch("vietnam_tinh.geojson")
+        .then((response) => response.json())
+        .then((text) => (tinh = text));
       fetch("vietnam_huyen.geojson")
         .then((response) => response.json())
-        .then((text) => (content = text));
-        fetch("1.geojson")
+        .then((text1) => (huyen = text1));
+      fetch("vietnam.geojson")
         .then((response) => response.json())
-        .then((text1) => (hcm = text1));
+        .then((text1) => (xa = text1));
+
       map.on("load", () => {
         // Add a source for the state polygons.
         map.addSource("states", {
           type: "geojson",
-          data: content,
+          data: tinh,
         });
 
         //Add a layer showing the state polygons.
@@ -81,47 +97,207 @@
             "fill-color": "rgba(200, 100, 240, 0.4)",
             "fill-outline-color": "red",
           },
-          "filter":["==","NAME_1","Hồ Chí Minh"]
         });
-        // map.addLayer({
-        //   id: "states-layer-hover1",
-        //   type: "fill",
-        //   source: "states",
-        //   paint: {
-        //     "fill-color": "rgba(200, 100, 240, 0.6)",
-        //   },
-        // });
+        map.addLayer({
+          id: "states-layer-hover1",
+          type: "fill",
+          source: "states",
+          paint: {
+            "fill-color": "rgba(200, 100, 240, 0.6)",
+          },
+          filter: ["==", "NAME_1", ""],
+        });
         map.addLayer({
           id: "states-layer-hover",
           type: "line",
           source: "states",
           paint: {
-            "line-color":"white",
-            "line-width":2,
+            "line-color": "white",
+            "line-width": 2,
           },
-          "filter": ["==", "NAME_1", ""]
+          filter: ["==", "NAME_1", ""],
         });
-
+        var click = 0;
+        function displayPopup(e, _tinh, popup) {
+          if (popup != null) popup.remove();
+          const div = window.document.createElement("div");
+          popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: "top-left",
+          })
+            .setLngLat(e.lngLat)
+            .setDOMContent(div)
+            .setHTML(
+              `<h3>${_tinh}</h3>
+                <div id="popup">
+                <p class="left">Tổng ca dương tính:</p>
+                <p class="right">${16}</p>
+                <p class="left">Ca dương tính trong ngày:</p>
+                <p class="right">${16}</p>
+                <p class="left">Tỷ lệ vùng xanh:</p>
+                <p class="right">${16}</p>
+                </div>
+                `
+            )
+            .addTo(map);
+          return popup;
+        }
+        async function getName(e){
+          return fetch(`https://provinces.open-api.vn/api/p/search/?q=${e.features[0].properties.NAME_1}`)
+              .then(response=>response.json())
+              .then(text=>{return text});
+        }
         // When a click event occurs on a feature in the states layer,
         // open a popup at the location of the click, with description
         // HTML from the click event's properties.
         var popup;
-        map.on("mousemove", "states-layer", (e) => {
-            if (popup != null) popup.remove();
+        let currentPositon;
+        let lastPositon = "";
+         map.on("mousemove", "states-layer",(e) => {
+          if (popup != null) popup.remove();
 
-          popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false,
-          })
-            .setLngLat(e.lngLat)
-            .setHTML(e.features[0].properties.NAME_2)
-            .addTo(map);
-            map.setFilter("states-layer-hover", ["==", "NAME_2", e.features[0].properties.NAME_2]);
-            map.setFilter("states-layer-hover1", ["==", "NAME_2", e.features[0].properties.NAME_2]);
+          var _tinh;
+          currentPositon = e.features[0].properties.NAME_1;
+          if (click == 0) {
+            if (currentPositon!=lastPositon)
+             {
+              _tinh = getName(e);
+            }
+ 
+            console.log(_tinh);
+            lastPositon = currentPositon;
 
+            // let donViHanhChinh = "Tỉnh ";
+            // if (e.features[0].properties.NAME_1 == "Hồ Chí Minh")
+            //   donViHanhChinh = "Thành Phố ";
+            // else {
+            //   if (e.features[0].properties.NAME_1 == "Hà Nội") {
+            //     donViHanhChinh = "Thủ đô ";
+            //   } else {
+            //     donViHanhChinh = "Tỉnh ";
+            //   }
+            // }
+
+            const div = window.document.createElement("div");
+            popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              anchor: "top-left",
+            })
+              .setLngLat(e.lngLat)
+              .setDOMContent(div)
+              .setHTML(
+                `<h3>${_tinh}</h3>
+                <div id="popup">
+                <p class="left">Tổng ca dương tính:</p>
+                <p class="right">${16}</p>
+                <p class="left">Ca dương tính trong ngày:</p>
+                <p class="right">${16}</p>
+                <p class="left">Tỷ lệ vùng xanh:</p>
+                <p class="right">${16}</p>
+                </div>
+                `
+              )
+              .addTo(map);
+
+            map.setFilter("states-layer-hover", [
+              "==",
+              "NAME_1",
+              e.features[0].properties.NAME_1,
+            ]);
+            map.setFilter("states-layer-hover1", [
+              "==",
+              "NAME_1",
+              e.features[0].properties.NAME_1,
+            ]);
+          }
+          if (click == 1) {
+            let donViHanhChinh = "Huyện ";
+            const div = window.document.createElement("div");
+            popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              anchor: "top-left",
+            })
+              .setLngLat(e.lngLat)
+              .setDOMContent(div)
+              .setHTML(
+                `<h3>${donViHanhChinh+e.features[0].properties.NAME_2}</h3>
+                <div id="popup">
+                <p class="left">Tổng ca dương tính:</p>
+                <p class="right">${16}</p>
+                <p class="left">Ca dương tính trong ngày:</p>
+                <p class="right">${16}</p>
+                <p class="left">Tỷ lệ vùng xanh:</p>
+                <p class="right">${16}</p>
+                </div>
+                `
+              )
+              .addTo(map);
+            map.setFilter("states-layer-hover", [
+              "all",
+              ["==", "NAME_1", e.features[0].properties.NAME_1],
+              ["==", "NAME_2", e.features[0].properties.NAME_2],
+            ]);
+            map.setFilter("states-layer-hover1", [
+              "all",
+              ["==", "NAME_1", e.features[0].properties.NAME_1],
+              ["==", "NAME_2", e.features[0].properties.NAME_2],
+            ]);
+          }
+          if (click == 2) {
+            popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+            })
+              .setLngLat(e.lngLat)
+              .setHTML(e.features[0].properties.NAME_3)
+              .addTo(map);
+            map.setFilter("states-layer-hover", [
+              "all",
+              ["==", "NAME_2", e.features[0].properties.NAME_2],
+              ["==", "NAME_3", e.features[0].properties.NAME_3],
+            ]);
+            map.setFilter("states-layer-hover1", [
+              "all",
+              ["==", "NAME_2", e.features[0].properties.NAME_2],
+              ["==", "NAME_3", e.features[0].properties.NAME_3],
+            ]);
+          }
         });
-        map.on("click",(e)=>{
-          map.getSource('states').setData(hcm);
+        map.on("click", "states-layer", (e) => {
+          if (click == 0) {
+            map.getSource("states").setData(huyen);
+            map.setFilter("states-layer", [
+              "==",
+              "NAME_1",
+              e.features[0].properties.NAME_1,
+            ]);
+            map.flyTo({
+              center: e.lngLat,
+              zoom: 8.9,
+            });
+          }
+          if (click == 1) {
+            map.getSource("states").setData(xa);
+            map.setFilter("states-layer", [
+              "all",
+              ["==", "NAME_1", e.features[0].properties.NAME_1],
+              ["==", "NAME_2", e.features[0].properties.NAME_2],
+            ]);
+            map.flyTo({
+              center: e.lngLat,
+              zoom: 10,
+            });
+          }
+          if (click == 2) {
+            map.flyTo({
+              center: e.lngLat,
+              zoom: 11.9,
+            });
+          }
+          if (click < 2) click = click + 1;
         });
         // Change the cursor to a pointer when
         // the mouse is over the states layer.
@@ -134,9 +310,18 @@
         map.on("mouseleave", "states-layer", () => {
           map.getCanvas().style.cursor = "";
           if (popup != null) popup.remove();
-          map.setFilter("states-layer-hover", ["==", "NAME_2",""]);
-          map.setFilter("states-layer-hover1", ["==", "NAME_2",""]);
-
+          if (click == 0) {
+            map.setFilter("states-layer-hover", ["==", "NAME_1", ""]);
+            map.setFilter("states-layer-hover1", ["==", "NAME_1", ""]);
+          }
+          if (click == 1) {
+            map.setFilter("states-layer-hover", ["==", "NAME_2", ""]);
+            map.setFilter("states-layer-hover1", ["==", "NAME_2", ""]);
+          }
+          if (click == 2) {
+            map.setFilter("states-layer-hover", ["==", "NAME_3", ""]);
+            map.setFilter("states-layer-hover1", ["==", "NAME_3", ""]);
+          }
         });
       });
     </script>
