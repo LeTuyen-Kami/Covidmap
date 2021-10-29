@@ -80,3 +80,16 @@ li {
   img:hover {
     cursor: pointer;
   }
+  #popup{
+    display:flex; flex-flow:row wrap;
+    line-height: 7px;
+  }
+  #popup .left {
+    width:80%;
+    text-align:left;
+    }
+
+  #popup  .right {
+    width:20%;
+    text-align:right;
+    }
