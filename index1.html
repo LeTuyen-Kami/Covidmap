@@ -118,88 +118,84 @@
           filter: ["==", "NAME_1", ""],
         });
         var click = 0;
-        function displayPopup(e, _tinh, popup) {
-          if (popup != null) popup.remove();
-          const div = window.document.createElement("div");
-          popup = new mapboxgl.Popup({
-            closeButton: false,
-            closeOnClick: false,
-            anchor: "top-left",
-          })
-            .setLngLat(e.lngLat)
-            .setDOMContent(div)
-            .setHTML(
-              `<h3>${_tinh}</h3>
-                <div id="popup">
-                <p class="left">Tổng ca dương tính:</p>
-                <p class="right">${16}</p>
-                <p class="left">Ca dương tính trong ngày:</p>
-                <p class="right">${16}</p>
-                <p class="left">Tỷ lệ vùng xanh:</p>
-                <p class="right">${16}</p>
-                </div>
-                `
-            )
-            .addTo(map);
-          return popup;
-        }
-        async function getName(e){
-          return fetch(`https://provinces.open-api.vn/api/p/search/?q=${e.features[0].properties.NAME_1}`)
-              .then(response=>response.json())
-              .then(text=>{return text});
-        }
         // When a click event occurs on a feature in the states layer,
         // open a popup at the location of the click, with description
         // HTML from the click event's properties.
-        var popup;
-        let currentPositon;
-        let lastPositon = "";
-         map.on("mousemove", "states-layer",(e) => {
-          if (popup != null) popup.remove();
-
-          var _tinh;
-          currentPositon = e.features[0].properties.NAME_1;
-          if (click == 0) {
-            if (currentPositon!=lastPositon)
-             {
-              _tinh = getName(e);
-            }
- 
-            console.log(_tinh);
-            lastPositon = currentPositon;
-
-            // let donViHanhChinh = "Tỉnh ";
-            // if (e.features[0].properties.NAME_1 == "Hồ Chí Minh")
-            //   donViHanhChinh = "Thành Phố ";
-            // else {
-            //   if (e.features[0].properties.NAME_1 == "Hà Nội") {
-            //     donViHanhChinh = "Thủ đô ";
-            //   } else {
-            //     donViHanhChinh = "Tỉnh ";
-            //   }
-            // }
-
-            const div = window.document.createElement("div");
-            popup = new mapboxgl.Popup({
-              closeButton: false,
-              closeOnClick: false,
-              anchor: "top-left",
-            })
-              .setLngLat(e.lngLat)
-              .setDOMContent(div)
-              .setHTML(
-                `<h3>${_tinh}</h3>
-                <div id="popup">
+        var popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+        })
+          .setHTML(
+            `<div id="popup">
+                <h3></h3>
                 <p class="left">Tổng ca dương tính:</p>
-                <p class="right">${16}</p>
+                <p class="right" id="cases">${16}</p>
                 <p class="left">Ca dương tính trong ngày:</p>
-                <p class="right">${16}</p>
+                <p class="right" id="casesToday">${16}</p>
                 <p class="left">Tỷ lệ vùng xanh:</p>
                 <p class="right">${16}</p>
+                <p class="left">Tử vong:</p>
+                <p class="right" id="casesDeath">${16}</p>
                 </div>
                 `
+          )
+          .addTo(map);
+        let currentPositon;
+        let lastPositon = "";
+        let currentPositon1;
+        let currentPositon2;
+        map.on("mousemove", "states-layer", (e) => {
+          //if (popup != null) popup.remove();
+
+          currentPositon = e.features[0].properties.NAME_1;
+          currentPositon1 = e.features[0].properties.NAME_2;
+          currentPositon2 = e.features[0].properties.NAME_3;
+
+          if (click == 0) {
+            if (currentPositon != lastPositon) {
+              // const div = window.document.createElement("div");
+              // popup
+              //   .setLngLat(e.lngLat)
+              //   .setDOMContent(div)
+              //   .setHTML(
+              //     `<div id="popup">
+              //   <h3></h3>
+              //   <p class="left">Tổng ca dương tính:</p>
+              //   <p class="right id="cases_Tinh"></p>
+              //   <p class="left">Ca dương tính trong ngày:</p>
+              //   <p class="right">${16}</p>
+              //   <p class="left">Tỷ lệ vùng xanh:</p>
+              //   <p class="right">${16}</p>
+              //   </div>
+              //   `
+              //   )
+              //   .addTo(map);
+              fetch(
+                `https://provinces.open-api.vn/api/p/search/?q=${e.features[0].properties.NAME_1}`
               )
-              .addTo(map);
+                .then((response) => response.json())
+                .then((text) => {
+                  document.querySelector("#popup h3").innerHTML = text[0].name;
+                });
+              let tenTinh = e.features[0].properties.NAME_1;
+              fetch("https://static.pipezero.com/covid/data.json")
+                .then((response) => response.json())
+                .then((text) => {
+                  for (let i = 0; i < 63; i++) {
+                    let name = text.locations[i].name;
+                    if (name.includes(tenTinh)) {
+                      document.querySelector("#cases").innerHTML =
+                        text.locations[i].cases;
+                      document.querySelector("#casesToday").innerHTML=text.locations[i].casesToday;
+                      document.querySelector("#casesDeath").innerHTML=text.locations[i].death;
+                      break;
+                    }
+                  }
+                });
+            }
+            lastPositon = currentPositon;
+            popup.setLngLat(e.lngLat);
+            if (popup != null) popup.addTo(map);
 
             map.setFilter("states-layer-hover", [
               "==",
@@ -213,28 +209,18 @@
             ]);
           }
           if (click == 1) {
-            let donViHanhChinh = "Huyện ";
-            const div = window.document.createElement("div");
-            popup = new mapboxgl.Popup({
-              closeButton: false,
-              closeOnClick: false,
-              anchor: "top-left",
-            })
-              .setLngLat(e.lngLat)
-              .setDOMContent(div)
-              .setHTML(
-                `<h3>${donViHanhChinh+e.features[0].properties.NAME_2}</h3>
-                <div id="popup">
-                <p class="left">Tổng ca dương tính:</p>
-                <p class="right">${16}</p>
-                <p class="left">Ca dương tính trong ngày:</p>
-                <p class="right">${16}</p>
-                <p class="left">Tỷ lệ vùng xanh:</p>
-                <p class="right">${16}</p>
-                </div>
-                `
+            if (currentPositon1 != lastPositon) {
+              fetch(
+                `https://provinces.open-api.vn/api/d/search/?q=${e.features[0].properties.NAME_2}`
               )
-              .addTo(map);
+                .then((response) => response.json())
+                .then((text) => {
+                  document.querySelector("#popup h3").innerHTML = text[0].name;
+                });
+            }
+            lastPositon = currentPositon1;
+            popup.setLngLat(e.lngLat);
+            if (popup != null) popup.addTo(map);
             map.setFilter("states-layer-hover", [
               "all",
               ["==", "NAME_1", e.features[0].properties.NAME_1],
@@ -247,13 +233,35 @@
             ]);
           }
           if (click == 2) {
-            popup = new mapboxgl.Popup({
-              closeButton: false,
-              closeOnClick: false,
-            })
-              .setLngLat(e.lngLat)
-              .setHTML(e.features[0].properties.NAME_3)
-              .addTo(map);
+            if (currentPositon2 != lastPositon) {
+              // const div = window.document.createElement("div");
+              // popup
+              //   .setLngLat(e.lngLat)
+              //   .setDOMContent(div)
+              //   .setHTML(
+              //     `<div id="popup">
+              //   <h3></h3>
+              //   <p class="left">Tổng ca dương tính:</p>
+              //   <p class="right">${16}</p>
+              //   <p class="left">Ca dương tính trong ngày:</p>
+              //   <p class="right">${16}</p>
+              //   <p class="left">Tỷ lệ vùng xanh:</p>
+              //   <p class="right">${16}</p>
+              //   </div>
+              //   `
+              //   )
+              //   .addTo(map);
+              fetch(
+                `https://provinces.open-api.vn/api/w/search/?q=${e.features[0].properties.NAME_3}`
+              )
+                .then((response) => response.json())
+                .then((text) => {
+                  document.querySelector("#popup h3").innerHTML = text[0].name;
+                });
+            }
+            lastPositon = currentPositon2;
+            popup.setLngLat(e.lngLat);
+            if (popup != null) popup.addTo(map);
             map.setFilter("states-layer-hover", [
               "all",
               ["==", "NAME_2", e.features[0].properties.NAME_2],
