@@ -53,7 +53,7 @@ ul {
   bottom: 0;
   width: 100px;
   height: 5px;
-  left: 400px;
+  left: 100px;
   background-color: pink;
   transition:ease-in-out  1s;
 }
