@@ -21,13 +21,13 @@ map.addControl(new mapboxgl.FullscreenControl());
 var tinh;
 var huyen;
 var xa;
-fetch("vietnam_tinh.geojson")
+fetch("/Covidmap/vietnam_tinh.geojson")
   .then((response) => response.json())
   .then((text) => (tinh = text));
-fetch("vietnam_huyen.geojson")
+fetch("/Covidmapvietnam_huyen.geojson")
   .then((response) => response.json())
   .then((text1) => (huyen = text1));
-fetch("vietnam.geojson")
+fetch("/Covidmapvietnam.geojson")
   .then((response) => response.json())
   .then((text1) => (xa = text1));
 var popup = new mapboxgl.Popup({
